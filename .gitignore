@@ -1,1 +1,5 @@
 lambda_sqs_to_s3/.coverage
+lambda_sqs_to_s3/volume/cache/machine.json
+lambda_sqs_to_s3/volume/cache/server.test.pem.crt
+lambda_sqs_to_s3/volume/cache/server.test.pem.key
+lambda_sqs_to_s3/volume/cache/service-catalog-3_8_2_dev152-1_35_63.pickle
