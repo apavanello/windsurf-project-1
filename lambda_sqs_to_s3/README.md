@@ -1,72 +1,153 @@
-# SQS to S3 Lambda Function
+# Pipeline SQS para S3 com AWS Lambda
 
-## Overview
-This AWS Lambda function processes messages from an SQS queue and stores them in an S3 bucket.
+## 🚀 Visão Geral
+Este projeto implementa um pipeline serverless para processar mensagens do Amazon SQS e armazená-las no Amazon S3, utilizando AWS Lambda. O sistema é organizado com uma estrutura de pastas baseada em data (YYYY/MM/DD) para melhor gerenciamento dos arquivos.
 
-## Prerequisites
-- AWS Account
-- AWS Lambda
-- Amazon SQS
-- Amazon S3
+## 📋 Funcionalidades Principais
+- Processamento em lote de mensagens SQS
+- Organização automática em pastas por data
+- Processamento paralelo de mensagens
+- Tratamento robusto de erros
+- Relatório detalhado de falhas em lote
+- Metadados completos para cada arquivo
 
-## Setup Instructions
-1. Create an S3 bucket to store the messages
-2. Create an SQS queue
-3. Create a Lambda function
-4. Set the following environment variables:
-   - `S3_BUCKET_NAME`: Name of the S3 bucket to store messages
+## 🏗️ Arquitetura
 
-## IAM Permissions
-Ensure the Lambda execution role has the following permissions:
-- `sqs:ReceiveMessage`
-- `s3:PutObject`
+### Componentes
+1. **AWS Lambda (lambda_function.py)**
+   - Processa mensagens em lote
+   - Organiza arquivos por data
+   - Gerencia metadados
+   - Trata erros e falhas
 
-## Deployment
-1. Zip the contents of this directory
-2. Upload to AWS Lambda
-3. Configure the SQS trigger in the Lambda function
+2. **Infraestrutura Terraform (main.tf)**
+   - Configuração da função Lambda
+   - Definição da fila SQS
+   - Bucket S3
+   - Políticas IAM
+   - Mapeamento de eventos
 
-## Configuration
-- Messages are stored in `sqs_messages/` prefix in S3
-- Filename format: `YYYYMMDD_HHMMSS_microseconds_message.json`
+3. **Script de Teste (send_test_message.py)**
+   - Envio de mensagens de teste
+   - Simulação de diferentes cenários
 
-## Customization
-Modify `lambda_function.py` to add custom processing logic for your specific use case.
+## 🗂️ Estrutura de Armazenamento
+```
+s3://bucket-name/
+    └── YYYY/               # Ano
+        └── MM/            # Mês
+            └── DD/        # Dia
+                └── HHMMSS_microseconds_messageId.json
+```
 
-## LocalStack Setup
-1. Install LocalStack:
+## 📊 Metadados
+Cada arquivo armazenado inclui:
+- ID da mensagem
+- Timestamp de processamento
+- ID da requisição
+- Ano/Mês/Dia
+- Atributos da mensagem
+- Detalhes do processamento
+
+## 🛠️ Configuração do Ambiente
+
+### Pré-requisitos
+- Python 3.9+
+- Terraform 1.5.0+
+- LocalStack (para desenvolvimento local)
+- AWS CLI (opcional)
+
+### Instalação
+1. Clone o repositório
+2. Instale as dependências de desenvolvimento:
    ```bash
-   pip install localstack
+   pip install -r requirements-dev.txt
    ```
-
-2. Start LocalStack:
-   ```bash
-   localstack start
-   ```
-
-3. Initialize Terraform:
+3. Configure o LocalStack ou credenciais AWS
+4. Aplique a infraestrutura:
    ```bash
    terraform init
-   ```
-
-4. Apply the Terraform configuration:
-   ```bash
    terraform apply
    ```
 
-5. Test the setup:
-   ```bash
-   # Send a test message to SQS
-   aws --endpoint-url=http://localhost:4566 sqs send-message \
-       --queue-url http://localhost:4566/000000000000/incoming-messages-queue \
-       --message-body '{"test": "message"}'
+## 🧪 Testes
+O projeto inclui testes unitários abrangentes:
 
-   # Check S3 bucket for the processed message
-   aws --endpoint-url=http://localhost:4566 s3 ls s3://sqs-messages-bucket/sqs_messages/
-   ```
+```bash
+python -m pytest -v --cov=.
+```
 
-## Requirements
-- LocalStack
-- Terraform >= 1.5.0
-- AWS CLI
-- Python 3.9
+### Cobertura de Testes
+- Geração de caminhos
+- Processamento de mensagens
+- Tratamento de erros
+- Processamento em lote
+- Validação de metadados
+
+## 🔧 Configurações
+
+### Lambda
+- Memória: 128 MB
+- Timeout: 3 segundos
+- Tamanho do Lote: 10 mensagens
+- Lotes Concorrentes: 2
+
+### SQS
+- Nome da Fila: incoming-messages-queue
+- Processamento em Lote: Habilitado
+- Relatório de Falhas: Habilitado
+
+### S3
+- Nome do Bucket: sqs-messages-bucket
+- Organização: Por data (YYYY/MM/DD)
+- Force Destroy: true
+
+## 🔒 Segurança
+- Permissões IAM mínimas necessárias
+- Sem dados sensíveis no código
+- Logging seguro de informações
+- Tratamento adequado de erros
+
+## 📝 Logs e Monitoramento
+- Logs detalhados de processamento
+- Rastreamento de mensagens
+- Métricas de sucesso/falha
+- Informações de lote
+
+## 🚀 Uso
+
+### Envio de Mensagens
+```python
+python send_test_message.py
+```
+
+### Verificação de Resultados
+1. Acesse o bucket S3
+2. Navegue pela estrutura de pastas (YYYY/MM/DD)
+3. Verifique os arquivos JSON e metadados
+
+## ⚠️ Limitações Conhecidas
+- Timeout pode ser insuficiente para lotes grandes
+- Sem implementação de DLQ
+- Mecanismos limitados de recuperação de erros
+
+## 🔄 Ciclo de Desenvolvimento
+1. Desenvolvimento local com LocalStack
+2. Testes unitários
+3. Validação de infraestrutura
+4. Deploy para produção
+
+## 📚 Referências
+- [Documentação AWS Lambda](https://docs.aws.amazon.com/lambda)
+- [Documentação AWS SQS](https://docs.aws.amazon.com/sqs)
+- [Documentação Terraform](https://www.terraform.io/docs)
+
+## 🤝 Contribuição
+1. Fork o projeto
+2. Crie sua branch de feature
+3. Commit suas alterações
+4. Push para a branch
+5. Abra um Pull Request
+
+## 📄 Licença
+Este projeto está sob a licença MIT.
