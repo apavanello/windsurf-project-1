@@ -15,12 +15,14 @@ services:
       - AWS_DEFAULT_REGION=us-east-1
       - AWS_ACCESS_KEY_ID=test
       - AWS_SECRET_ACCESS_KEY=test
-      - SERVICES=lambda,s3,sqs
+      - SERVICES=lambda,s3,sqs,iam,logs,sts
       - PERSISTENCE=1
       - DATA_DIR=/tmp/localstack/data
     volumes:
       - "${LOCALSTACK_VOLUME_DIR:-./volume}:/var/lib/localstack"
       - "/var/run/docker.sock:/var/run/docker.sock"
+    networks:
+      - aws-local
 
   terraform:
     image: hashicorp/terraform:latest
@@ -32,6 +34,9 @@ services:
       - AWS_SECRET_ACCESS_KEY=test
       - AWS_DEFAULT_REGION=us-east-1
       - TF_VAR_environment=local
+      - TF_VAR_aws_endpoint=http://localstack:4566
+    networks:
+      - aws-local
     depends_on:
       - localstack
 
@@ -44,6 +49,8 @@ services:
       - AWS_ENDPOINT_URL=http://localstack:4566
     volumes:
       - .:/workspace
+    networks:
+      - aws-local
     depends_on:
       - localstack
 
@@ -60,9 +67,11 @@ services:
       - PYTHONUNBUFFERED=1
     volumes:
       - .:/app
+    networks:
+      - aws-local
     depends_on:
       - localstack
 
 networks:
-  default:
-    name: lambda-sqs-network
+  aws-local:
+    driver: bridge

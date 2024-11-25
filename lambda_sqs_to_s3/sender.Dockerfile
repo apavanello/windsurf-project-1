@@ -3,14 +3,17 @@ FROM python:3.9-slim
 WORKDIR /app
 
 # Install dependencies
-COPY requirements-dev.txt .
-RUN pip install --no-cache-dir -r requirements-dev.txt
+RUN pip install --no-cache-dir boto3
 
-# Copy source code
+# Copy the message sender script
 COPY send_test_message.py .
 
-# Set Python to run in unbuffered mode
-ENV PYTHONUNBUFFERED=1
+# Set default environment variables
+ENV AWS_ENDPOINT_URL=http://localstack:4566 \
+    AWS_DEFAULT_REGION=us-east-1 \
+    SQS_QUEUE_NAME=incoming-messages-queue \
+    NUM_MESSAGES=10 \
+    NUM_THREADS=2
 
-# Command to run the script
+# Run the script
 CMD ["python", "send_test_message.py"]

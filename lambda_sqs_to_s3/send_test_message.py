@@ -1,19 +1,31 @@
 import boto3
 import json
+import os
+import logging
 from datetime import datetime
 import uuid
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Get configuration from environment variables
+AWS_ENDPOINT = os.getenv('AWS_ENDPOINT_URL', 'http://localhost:4566')
+AWS_REGION = os.getenv('AWS_DEFAULT_REGION', 'us-east-1')
+QUEUE_NAME = os.getenv('SQS_QUEUE_NAME', 'incoming-messages-queue')
+NUM_MESSAGES = int(os.getenv('NUM_MESSAGES', '10'))
 
 # Create SQS client using LocalStack endpoint
 sqs = boto3.client(
     'sqs',
-    endpoint_url='http://localhost:4566',
-    region_name='us-east-1',
+    endpoint_url=AWS_ENDPOINT,
+    region_name=AWS_REGION,
     aws_access_key_id='test',
     aws_secret_access_key='test'
 )
 
 # Send 10 different messages
-for i in range(10):
+for i in range(NUM_MESSAGES):
     # Generate unique test message
     message = {
         "test_id": f"BULK-{str(i+1).zfill(3)}",
@@ -34,7 +46,7 @@ for i in range(10):
 
     # Send message to SQS
     response = sqs.send_message(
-        QueueUrl='http://localhost:4566/000000000000/incoming-messages-queue',
+        QueueUrl=f'http://localhost:4566/000000000000/{QUEUE_NAME}',
         MessageBody=json.dumps(message),
         MessageAttributes={
             'Priority': {
@@ -52,6 +64,6 @@ for i in range(10):
         }
     )
     
-    print(f"Message {i+1}/10 sent! MessageId: {response['MessageId']}")
+    logger.info(f"Message {i+1}/{NUM_MESSAGES} sent! MessageId: {response['MessageId']}")
 
-print("\nAll 10 messages have been sent successfully!")
+logger.info("\nAll messages have been sent successfully!")
